@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DatabaseService {
   late String uid;
   final Memory mem = Memory();
-  CollectionReference userCollection =
+  final CollectionReference userCollection =
       FirebaseFirestore.instance.collection('users');
 
   Future addUserData(

@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram/components/BottomNav.dart';
 import 'package:instagram/components/FeedPost.dart';
 import 'package:instagram/components/FeedStory.dart';
+import 'package:instagram/services/images.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Feed extends StatefulWidget {
   const Feed({Key? key}) : super(key: key);
@@ -11,13 +14,17 @@ class Feed extends StatefulWidget {
 }
 
 class _FeedState extends State<Feed> {
-  final textS = [
-    "meri crush",
-    "teri_crush",
-    "uski_crush",
-    "sabki_crush",
-    "bas_hogaya"
-  ];
+  String? _username = "";
+  getUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _username = prefs.getString('username');
+  }
+
+  @override
+  void initState() {
+    getUsername();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,45 +57,65 @@ class _FeedState extends State<Feed> {
         // centerTitle: true,
         backgroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width,
-                minWidth: MediaQuery.of(context).size.width,
-                maxHeight: 100.0,
-              ),
-              decoration: BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(width: 0.3, color: Colors.grey))),
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                scrollDirection: Axis.horizontal,
+      body: StreamBuilder(
+          stream: ImageData.imageCollection
+              .where('username', isNotEqualTo: _username) //Todo: fix this
+              .snapshots(),
+          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if (!snapshot.hasData) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return SingleChildScrollView(
+              child: Column(
                 children: [
-                  for (int i = 0; i < 10; i++)
-                    Story(img: "assets/sample.jpg", text: "Your Story"),
-                  // Story(img: "assets/sample.jpg", text: textS[i % 5]),
+                  Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width,
+                      minWidth: MediaQuery.of(context).size.width,
+                      maxHeight: 100.0,
+                    ),
+                    decoration: BoxDecoration(
+                        border: Border(
+                            bottom:
+                                BorderSide(width: 0.3, color: Colors.grey))),
+                    child: ListView(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        for (int i = 0; i < 10; i++)
+                          Story(img: "assets/sample.jpg", text: "Your Story"),
+                        // Story(img: "assets/sample.jpg", text: textS[i % 5]),
+                      ],
+                    ),
+                  ),
+                  ...snapshot.data!.docs.map((post) {
+                    Map<String, dynamic> data =
+                        post.data() as Map<String, dynamic>;
+                    if (data["username"] != _username)
+                      return Post(
+                        caption: data["caption"],
+                        image: data["photoUrl"],
+                        username: data["username"],
+                        isLiked: false,
+                        numOfLike: data["likes"],
+                        location: data["location"],
+                        likedby: "satan",
+                        date: data["date"],
+                        dp: "https://event.iitg.ac.in/icann2019/Proceedings_LaTeX/2019/IITG_White.png",
+                      );
+                    else {
+                      return SizedBox(
+                        height: 0,
+                        width: 0,
+                      );
+                    }
+                  }),
                 ],
               ),
-            ),
-            for (int i = 0; i < 10; i++)
-              Post(
-                caption:
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-                image:
-                    "https://static.toiimg.com/thumb/msid-70872031,width-1200,height-900,resizemode-4/.jpg",
-                username: "apna_clg",
-                isLiked: false,
-                numOfLike: 420,
-                location: "Guwahati",
-                likedby: "satan",
-                date: "September 11",
-                dp: "https://event.iitg.ac.in/icann2019/Proceedings_LaTeX/2019/IITG_White.png",
-              )
-          ],
-        ),
-      ),
+            );
+          }),
       bottomNavigationBar: BottomNav(
         currentIndex: 0,
       ),

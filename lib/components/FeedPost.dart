@@ -142,16 +142,20 @@ class _PostState extends State<Post> {
                 height: 10.0,
               ),
               Container(
-                child: Text.rich(TextSpan(
-                    text: '${widget.username}',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                    children: [
-                      TextSpan(
-                          text: '  ${widget.caption}',
-                          style: TextStyle(fontWeight: FontWeight.normal)
-                          // style: TextStyle(color: Colors.grey[800]),
-                          )
-                    ])),
+                alignment: Alignment.centerLeft,
+                child: Text.rich(
+                  TextSpan(
+                      text: '${widget.username}',
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      children: [
+                        TextSpan(
+                            text: '  ${widget.caption}',
+                            style: TextStyle(fontWeight: FontWeight.normal)
+                            // style: TextStyle(color: Colors.grey[800]),
+                            )
+                      ]),
+                ),
               ),
               SizedBox(
                 height: 25.0,

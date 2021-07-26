@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram/components/BottomNav.dart';
 import 'package:instagram/pages/edit_profile.dart';
+import 'package:instagram/services/images.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfile extends StatefulWidget {
@@ -11,7 +14,7 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  final numOfPics = 30;
+  var numOfPics = 30;
   final crossAxisCount = 3;
 
   var _displayName = "loading", _bio, _website, _username = "loading";
@@ -69,156 +72,173 @@ class _UserProfileState extends State<UserProfile> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+      body: StreamBuilder(
+        stream: ImageData.imageCollection
+            .where('username', isEqualTo: _username)
+            .snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          numOfPics = snapshot.data!.docs.length;
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  backgroundColor: Colors.grey[500],
-                  radius: 41,
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      backgroundImage: AssetImage("assets/Oval.png"),
-                      radius: 36.0,
-                    ),
-                  ),
-                ),
-                Column(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Text(
-                      "54",
-                      style: TextStyle(fontSize: 18),
+                    CircleAvatar(
+                      backgroundColor: Colors.grey[500],
+                      radius: 41,
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.white,
+                        child: CircleAvatar(
+                          backgroundImage: AssetImage("assets/Oval.png"),
+                          radius: 36.0,
+                        ),
+                      ),
                     ),
-                    Text(
-                      "Posts",
-                      style: TextStyle(fontSize: 17),
-                    )
+                    Column(
+                      children: [
+                        Text(
+                          "54",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        Text(
+                          "Posts",
+                          style: TextStyle(fontSize: 17),
+                        )
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          "834",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        Text(
+                          "Followers",
+                          style: TextStyle(fontSize: 17),
+                        )
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          "54",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        Text(
+                          "Following",
+                          style: TextStyle(fontSize: 17),
+                        )
+                      ],
+                    ),
                   ],
                 ),
-                Column(
-                  children: [
-                    Text(
-                      "834",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    Text(
-                      "Followers",
-                      style: TextStyle(fontSize: 17),
-                    )
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text(
-                      "54",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    Text(
-                      "Following",
-                      style: TextStyle(fontSize: 17),
-                    )
-                  ],
-                ),
-              ],
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "$_displayName",
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                  SizedBox(
-                    height: 1,
-                  ),
-                  if (_bio != null)
-                    Text.rich(
-                      TextSpan(
-                        text: _bio,
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "$_displayName",
                         style: TextStyle(
                           fontSize: 15,
                         ),
-                        // children: [
-                        //   TextSpan(
-                        //       text: '  @pixsellz',
-                        //       style: TextStyle(color: Colors.blue[800]))
-                        // ],
                       ),
-                    ),
-                  SizedBox(
-                    height: 1,
+                      SizedBox(
+                        height: 1,
+                      ),
+                      if (_bio != null)
+                        Text.rich(
+                          TextSpan(
+                            text: _bio,
+                            style: TextStyle(
+                              fontSize: 15,
+                            ),
+                            // children: [
+                            //   TextSpan(
+                            //       text: '  @pixsellz',
+                            //       style: TextStyle(color: Colors.blue[800]))
+                            // ],
+                          ),
+                        ),
+                      SizedBox(
+                        height: 1,
+                      ),
+                      if (_website != null)
+                        Text(
+                          _website,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.blue[800],
+                          ),
+                        ),
+                    ],
                   ),
-                  if (_website != null)
-                    Text(
-                      _website,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.blue[800],
-                      ),
-                    ),
-                ],
-              ),
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
+                    width: MediaQuery.of(context).size.width,
+                    child: Center(
+                        heightFactor: 0.5,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => EditProfile()));
+                          },
+                          child: Text(
+                            "Edit Profile",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        )),
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Container(
+                  decoration: BoxDecoration(color: Colors.white),
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.width *
+                          1.3 *
+                          (numOfPics / (crossAxisCount * crossAxisCount)) +
+                      10,
+                  child: GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 1,
+                      mainAxisSpacing: 1,
+                      physics: NeverScrollableScrollPhysics(),
+                      children: <Widget>[
+                        ...snapshot.data!.docs.map((post) {
+                          Map<String, dynamic> data =
+                              post.data() as Map<String, dynamic>;
+                          return FittedBox(
+                            fit: BoxFit.fill,
+                            child: Image.network(data["photoUrl"]),
+                          );
+                        }),
+                      ]),
+                )
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.all(Radius.circular(10))),
-                width: MediaQuery.of(context).size.width,
-                child: Center(
-                    heightFactor: 0.5,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => EditProfile()));
-                      },
-                      child: Text(
-                        "Edit Profile",
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    )),
-              ),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            Container(
-              decoration: BoxDecoration(color: Colors.white),
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.width *
-                      (numOfPics / (crossAxisCount * crossAxisCount)) +
-                  10,
-              child: GridView.count(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 1,
-                mainAxisSpacing: 1,
-                physics: NeverScrollableScrollPhysics(),
-                children: [
-                  for (int i = 0; i < numOfPics; i++)
-                    FittedBox(
-                      fit: BoxFit.fill,
-                      child: Image.network(
-                        "https://st.depositphotos.com/1428083/2946/i/600/depositphotos_29460297-stock-photo-bird-cage.jpg",
-                      ),
-                    ),
-                ],
-              ),
-            )
-          ],
-        ),
+          );
+        },
       ),
       bottomNavigationBar: BottomNav(
         currentIndex: 4,
