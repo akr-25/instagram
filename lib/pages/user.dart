@@ -1,11 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:instagram/components/BottomNav.dart';
+import 'package:instagram/pages/edit_profile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class User extends StatelessWidget {
-  const User({Key? key}) : super(key: key);
+class UserProfile extends StatefulWidget {
+  UserProfile({Key? key}) : super(key: key);
 
+  @override
+  _UserProfileState createState() => _UserProfileState();
+}
+
+class _UserProfileState extends State<UserProfile> {
   final numOfPics = 30;
   final crossAxisCount = 3;
+
+  var _displayName = "loading", _bio, _website, _username = "loading";
+
+  setData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // var __displayName =
+    setState(() {
+      _displayName = prefs.getString('displayName') ??
+          prefs.getString('username') ??
+          "error";
+      _bio = prefs.getString('bio');
+      _website = prefs.getString('website');
+      _username = prefs.getString('username') ?? "error getting username";
+    });
+  }
+
+  @override
+  void initState() {
+    setData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +53,7 @@ class User extends StatelessWidget {
               width: 5,
             ),
             Text(
-              "apna_clg",
+              _username,
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 16,
@@ -105,7 +133,7 @@ class User extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Jacob West",
+                    "$_displayName",
                     style: TextStyle(
                       fontSize: 15,
                     ),
@@ -113,28 +141,31 @@ class User extends StatelessWidget {
                   SizedBox(
                     height: 1,
                   ),
-                  Text.rich(
-                    TextSpan(
-                      text: 'Digital goodies designer',
+                  if (_bio != null)
+                    Text.rich(
+                      TextSpan(
+                        text: _bio,
+                        style: TextStyle(
+                          fontSize: 15,
+                        ),
+                        // children: [
+                        //   TextSpan(
+                        //       text: '  @pixsellz',
+                        //       style: TextStyle(color: Colors.blue[800]))
+                        // ],
+                      ),
+                    ),
+                  SizedBox(
+                    height: 1,
+                  ),
+                  if (_website != null)
+                    Text(
+                      _website,
                       style: TextStyle(
                         fontSize: 15,
+                        color: Colors.blue[800],
                       ),
-                      children: [
-                        TextSpan(
-                            text: '  @pixsellz',
-                            style: TextStyle(color: Colors.blue[800]))
-                      ],
                     ),
-                  ),
-                  SizedBox(
-                    height: 1,
-                  ),
-                  Text(
-                    "Everything is designed.",
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -148,10 +179,17 @@ class User extends StatelessWidget {
                     borderRadius: BorderRadius.all(Radius.circular(10))),
                 width: MediaQuery.of(context).size.width,
                 child: Center(
-                    child: Text(
-                  "Edit Profile",
-                  style: TextStyle(fontSize: 16),
-                )),
+                    heightFactor: 0.5,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => EditProfile()));
+                      },
+                      child: Text(
+                        "Edit Profile",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    )),
               ),
             ),
             SizedBox(
