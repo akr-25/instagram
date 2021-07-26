@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram/pages/feed.dart';
+import 'package:instagram/components/HorizontalOrLine.dart';
 import 'package:instagram/pages/login_page.dart';
+import 'package:instagram/services/auth.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -11,6 +14,22 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPassController = TextEditingController();
+
+  AuthServices _auth = AuthServices();
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPassController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -41,6 +60,7 @@ class _SignUpState extends State<SignUp> {
                                   width: MediaQuery.of(context).size.width,
                                   height: 50.0,
                                   child: TextField(
+                                    controller: _usernameController,
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: Colors.grey[100],
@@ -60,6 +80,8 @@ class _SignUpState extends State<SignUp> {
                                   width: MediaQuery.of(context).size.width,
                                   height: 50.0,
                                   child: TextField(
+                                    controller: _emailController,
+                                    keyboardType: TextInputType.emailAddress,
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: Colors.grey[100],
@@ -79,6 +101,7 @@ class _SignUpState extends State<SignUp> {
                                   width: MediaQuery.of(context).size.width,
                                   height: 50.0,
                                   child: TextField(
+                                    controller: _passwordController,
                                     obscureText: true,
                                     decoration: InputDecoration(
                                       filled: true,
@@ -99,6 +122,7 @@ class _SignUpState extends State<SignUp> {
                                   width: MediaQuery.of(context).size.width,
                                   height: 50.0,
                                   child: TextField(
+                                    controller: _confirmPassController,
                                     obscureText: true,
                                     decoration: InputDecoration(
                                       filled: true,
@@ -119,13 +143,24 @@ class _SignUpState extends State<SignUp> {
                                 width: MediaQuery.of(context).size.width,
                                 height: 50.0,
                                 child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => Feed(),
-                                      ),
-                                    );
+                                  onPressed: () async {
+                                    if (_confirmPassController.text.trim() ==
+                                        _passwordController.text.trim()) {
+                                      try {
+                                        await _auth.addUser(
+                                            email: _emailController.text.trim(),
+                                            password:
+                                                _passwordController.text.trim(),
+                                            username: _usernameController.text
+                                                .trim());
+                                        Navigator.pushReplacementNamed(
+                                            context, '/feed');
+                                      } catch (e) {
+                                        log(e.toString());
+                                      }
+                                    } else {
+                                      log("Confirm password is not the same as password!!");
+                                    }
                                   },
                                   child: Text(
                                     'Sign Up',
@@ -191,38 +226,5 @@ class _SignUpState extends State<SignUp> {
             ),
           ),
         ));
-  }
-}
-
-class HorizontalOrLine extends StatelessWidget {
-  const HorizontalOrLine({
-    required this.label,
-    required this.height,
-  });
-
-  final String label;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: <Widget>[
-      Expanded(
-        child: new Container(
-            margin: const EdgeInsets.only(left: 10.0, right: 15.0),
-            child: Divider(
-              color: Colors.black,
-              height: height,
-            )),
-      ),
-      Text(label),
-      Expanded(
-        child: new Container(
-            margin: const EdgeInsets.only(left: 15.0, right: 10.0),
-            child: Divider(
-              color: Colors.black,
-              height: height,
-            )),
-      ),
-    ]);
   }
 }
