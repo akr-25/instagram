@@ -9,6 +9,20 @@ class DatabaseService {
   final CollectionReference userCollection =
       FirebaseFirestore.instance.collection('users');
 
+  //?check for unique username
+  Future<String?>? isUnique(String? username) async {
+    try {
+      if (username == null) return null;
+      QuerySnapshot<Object?> data =
+          await userCollection.where('username', isEqualTo: username).get();
+      if (data.docs.isNotEmpty)
+        return "User already exist";
+      else if (data.docs.isEmpty) return null;
+    } catch (e) {
+      throw (e);
+    }
+  }
+
   Future addUserData(
       {userCredential,
       username,
@@ -26,6 +40,7 @@ class DatabaseService {
       'bio': bio,
       'displayName': displayName,
       'website': website,
+      'dpUrl': null,
     });
     await mem.saveUser(userCredential.user!.uid);
     await mem.setMemory({
@@ -44,7 +59,8 @@ class DatabaseService {
       username,
       bio,
       displayName,
-      website}) async {
+      website,
+      dpUrl}) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final documentID = prefs.getString("documentID");
@@ -52,13 +68,16 @@ class DatabaseService {
       var _bio = bio ?? prefs.getString("bio");
       var _displayName = displayName ?? prefs.getString("displayName");
       var _website = website ?? prefs.getString("website");
+      var _dpUrl = dpUrl ?? prefs.getString("dpUrl");
       await userCollection.doc(documentID).update({
+        'dpUrl': _dpUrl,
         'username': _username,
         'bio': _bio,
         'displayName': _displayName,
         'website': _website,
       });
       await mem.setMemory({
+        'dpUrl': _dpUrl,
         'username': _username,
         'bio': _bio,
         'displayName': _displayName,

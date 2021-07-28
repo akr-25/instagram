@@ -7,7 +7,8 @@ class Memory {
     "bio",
     "website",
     "email",
-    "documentID"
+    "documentID",
+    "dpUrl"
   ];
 
   setMemory(_userData) async {

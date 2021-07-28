@@ -10,6 +10,7 @@ class Post extends StatefulWidget {
   final image;
   final numOfLike;
   final date;
+  final userDp;
 
   Post(
       {Key? key,
@@ -21,7 +22,8 @@ class Post extends StatefulWidget {
       required this.image,
       required this.likedby,
       required this.numOfLike,
-      required this.date})
+      required this.date,
+      required this.userDp})
       : super(key: key);
 
   @override
@@ -39,10 +41,26 @@ class _PostState extends State<Post> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image(
-                image: NetworkImage(widget.dp),
-                height: 48.0,
-                width: 48.0,
+              Container(
+                padding: EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(colors: [
+                      Colors.black,
+                      Colors.white
+                      // Colors.red,
+                      // Colors.purple,
+                      // Colors.red,
+                      // Colors.yellow,
+                    ], end: Alignment.bottomRight, begin: Alignment.topLeft)),
+                child: CircleAvatar(
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage(widget.dp),
+                    radius: 24,
+                  ),
+                  backgroundColor: Colors.white,
+                  radius: 24,
+                ),
               ),
               SizedBox(
                 width: 10.0,
@@ -61,10 +79,11 @@ class _PostState extends State<Post> {
                     SizedBox(
                       height: 1.0,
                     ),
-                    Text(
-                      '${widget.location}',
-                      style: TextStyle(color: Colors.grey[700], fontSize: 12),
-                    ),
+                    if (widget.location != null)
+                      Text(
+                        '${widget.location}',
+                        style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                      ),
                   ],
                 ),
               )
@@ -127,15 +146,15 @@ class _PostState extends State<Post> {
               ),
               Row(
                 children: [
-                  Image(
-                    image: AssetImage("assets/Oval.png"),
-                    height: 32,
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(widget.userDp),
+                    radius: 14,
                   ),
                   SizedBox(
                     width: 10.0,
                   ),
                   Text(
-                      'Liked by ${widget.likedby} and ${widget.numOfLike} others')
+                      'Liked by ${widget.likedby ?? "none"}  and ${widget.numOfLike} others')
                 ],
               ),
               SizedBox(

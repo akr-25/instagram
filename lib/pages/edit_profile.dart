@@ -1,9 +1,13 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:instagram/pages/change_password.dart';
 import 'package:instagram/services/auth.dart';
 import 'package:instagram/services/database.dart';
 import 'package:instagram/services/memory.dart';
+import 'package:instagram/services/storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfile extends StatefulWidget {
@@ -16,15 +20,43 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   final AuthServices _auth = AuthServices();
   final DatabaseService db = DatabaseService();
+  final StorageRepo _repo = StorageRepo();
+  late String _username;
+  String? _errorUserMessage;
+  DatabaseService _db = DatabaseService();
+
+  _isUserUnique() async {
+    try {
+      if (usernameController.text.trim() == _username) return null;
+      var _error = await _db.isUnique(usernameController.text.trim());
+      setState(() {
+        _errorUserMessage = _error;
+      });
+    } catch (e) {
+      log(e.toString());
+    }
+  }
 
   final displayNameController = TextEditingController(text: "loading");
   final websiteController = TextEditingController(text: "");
   final bioController = TextEditingController(text: "");
   final usernameController = TextEditingController(text: "");
+  late final String _uid;
+  var _dpUrl;
+
+  wid() {
+    if (_dpUrl == null)
+      return AssetImage('assets/Oval.png');
+    else
+      return NetworkImage(_dpUrl);
+  }
 
   setData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    _uid = prefs.getString('uid')!;
+    _username = prefs.getString('username')!;
     setState(() {
+      _dpUrl = prefs.getString('dpUrl');
       displayNameController.text = prefs.getString('displayName') ?? "";
       usernameController.text = prefs.getString('username') ?? "";
       bioController.text = prefs.getString('bio') ?? "";
@@ -34,6 +66,7 @@ class _EditProfileState extends State<EditProfile> {
 
   @override
   void initState() {
+    _isUserUnique();
     setData();
     super.initState();
   }
@@ -62,7 +95,7 @@ class _EditProfileState extends State<EditProfile> {
                   username: usernameController.text.trim(),
                   website: websiteController.text.trim(),
                   bio: bioController.text.trim());
-              Navigator.pushReplacementNamed(context, '/user');
+              Navigator.pop(context);
             },
             child: Icon(
               Icons.check,
@@ -83,15 +116,36 @@ class _EditProfileState extends State<EditProfile> {
           child: Column(
             children: [
               CircleAvatar(
-                backgroundImage: AssetImage("assets/Oval.png"),
+                backgroundImage: wid(),
                 radius: 40,
               ),
               SizedBox(
                 height: 10,
               ),
-              Text(
-                "Change Profile Picture",
-                style: TextStyle(color: Colors.blue.shade600),
+              GestureDetector(
+                onTap: () async {
+                  try {
+                    XFile? image = await ImagePicker()
+                        .pickImage(source: ImageSource.gallery);
+                    if (image == null) throw ("Image not selected");
+                    File file = File(image.path);
+                    var prefs = await SharedPreferences.getInstance();
+                    var uid = prefs.getString('uid');
+                    String downloadUrl = await _repo.addUserDp(_uid, file);
+                    await db.updateUserData(uid: uid, dpUrl: downloadUrl);
+                    setState(() async {
+                      SharedPreferences prefs =
+                          await SharedPreferences.getInstance();
+                      _dpUrl = prefs.getString('dpUrl');
+                    });
+                  } catch (e) {
+                    log(e.toString());
+                  }
+                },
+                child: Text(
+                  "Change Profile Picture",
+                  style: TextStyle(color: Colors.blue.shade600),
+                ),
               ),
               SizedBox(
                 height: 20,
@@ -103,7 +157,13 @@ class _EditProfileState extends State<EditProfile> {
               ),
               TextFormField(
                 maxLength: 20,
-                decoration: InputDecoration(labelText: "username"),
+                onChanged: (value) async {
+                  await _isUserUnique();
+                },
+                decoration: InputDecoration(
+                  labelText: "username",
+                  errorText: _errorUserMessage,
+                ),
                 controller: usernameController,
               ),
               TextFormField(
@@ -116,16 +176,47 @@ class _EditProfileState extends State<EditProfile> {
                 maxLength: 20,
                 controller: bioController,
               ),
-              TextButton(
-                onPressed: () async {
-                  await _auth.signOut();
-                  // await FacebookAuth.instance
-                  //     .logOut()
-                  //     .catchError((e) => log(e.toString()));
-                  Navigator.pushReplacementNamed(context, '/');
-                },
-                child: Text(
-                  "Log out",
+              SizedBox(
+                height: 20,
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: 50.0,
+                child: TextButton(
+                  style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.blueAccent)),
+                  onPressed: () async {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => ChangePass()));
+                  },
+                  child: Text(
+                    "Change Password",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: 50.0,
+                child: TextButton(
+                  style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.redAccent)),
+                  onPressed: () async {
+                    await _auth.signOut();
+                    // await FacebookAuth.instance
+                    //     .logOut()
+                    //     .catchError((e) => log(e.toString()));
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
+                  child: Text(
+                    "Log out",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               )
             ],

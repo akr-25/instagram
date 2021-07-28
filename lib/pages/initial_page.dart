@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:instagram/services/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
 
 class InitialPage extends StatelessWidget {
   InitialPage({Key? key}) : super(key: key);
@@ -59,32 +60,47 @@ class InitialPage extends StatelessWidget {
             height: 70.0,
           ),
           SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: 50.0,
-            child: OutlinedButton(
-                child: Row(
-                  children: [
-                    Text(
-                      'Login with Facebook',
-                      // style: TextStyle(color: Colors.blue),
-                    ),
-                    Icon(Icons.facebook),
-                  ],
-                ),
-                style: OutlinedButton.styleFrom(
-                  primary: Colors.blue,
-                  backgroundColor: Colors.grey[50],
-                  side: BorderSide(color: Colors.blue, width: 1),
-                ),
-                onPressed: () async {
-                  try {
-                    await _auth.signInWithFacebook();
-                    Navigator.of(context).pushNamed('/feed');
-                  } catch (e) {
-                    log(e.toString());
-                  }
-                }),
+            height: 50,
+            child: SignInButton(
+              Buttons.Facebook,
+              text: "Sign in with Facebook",
+              onPressed: () async {
+                try {
+                  await _auth.signInWithFacebook();
+                  Navigator.of(context).pushNamed('/feed');
+                } catch (e) {
+                  log(e.toString());
+                }
+              },
+            ),
           ),
+          // SizedBox(
+          //   width: MediaQuery.of(context).size.width,
+          //   height: 50.0,
+          //   child: OutlinedButton(
+          //       child: Row(
+          //         children: [
+          //           Text(
+          //             'Login with Facebook',
+          //             // style: TextStyle(color: Colors.blue),
+          //           ),
+          //           Icon(Icons.facebook),
+          //         ],
+          //       ),
+          //       style: OutlinedButton.styleFrom(
+          //         primary: Colors.blue,
+          //         backgroundColor: Colors.grey[50],
+          //         side: BorderSide(color: Colors.blue, width: 1),
+          //       ),
+          //       onPressed: () async {
+          //         try {
+          //           await _auth.signInWithFacebook();
+          //           Navigator.of(context).pushNamed('/feed');
+          //         } catch (e) {
+          //           log(e.toString());
+          //         }
+          //       }),
+          // ),
           Spacer(),
         ],
       ),

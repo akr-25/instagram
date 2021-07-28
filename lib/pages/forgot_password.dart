@@ -3,26 +3,23 @@ import 'dart:developer';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram/components/HorizontalOrLine.dart';
-import 'package:instagram/pages/forgot_password.dart';
 import 'package:instagram/pages/sign_up_page.dart';
 import 'package:instagram/services/auth.dart';
 
-class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+class ForgotPass extends StatefulWidget {
+  const ForgotPass({Key? key}) : super(key: key);
 
   @override
-  LoginState createState() => LoginState();
+  ForgotPassState createState() => ForgotPassState();
 }
 
-class LoginState extends State<Login> {
+class ForgotPassState extends State<ForgotPass> {
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final AuthServices _auth = AuthServices();
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -59,83 +56,38 @@ class LoginState extends State<Login> {
                           Column(
                             children: [
                               SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 50.0,
-                                  child: TextField(
-                                    keyboardType: TextInputType.emailAddress,
-                                    controller: _emailController,
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: Colors.grey[100],
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade600,
-                                          width: 0.1,
-                                        ),
+                                width: MediaQuery.of(context).size.width,
+                                height: 50.0,
+                                child: TextField(
+                                  keyboardType: TextInputType.emailAddress,
+                                  controller: _emailController,
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.grey[100],
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade600,
+                                        width: 0.1,
                                       ),
-                                      labelText: 'Email Address',
                                     ),
-                                  )),
-                              SizedBox(
-                                height: 10.0,
-                              ),
-                              SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 50.0,
-                                  child: TextField(
-                                    obscureText: true,
-                                    controller: _passwordController,
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: Colors.grey[100],
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade600,
-                                          width: 0.1,
-                                        ),
-                                      ),
-                                      labelText: 'Password',
-                                    ),
-                                  )),
-                              SizedBox(height: 5.0),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ForgotPass(),
-                                    ),
-                                  );
-                                },
-                                child: SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Text(
-                                    "Forgot password?",
-                                    style: TextStyle(color: Colors.blue),
-                                    textAlign: TextAlign.end,
+                                    labelText: 'Email Address',
                                   ),
                                 ),
                               ),
                               SizedBox(
-                                height: 20.0,
+                                height: 50,
                               ),
                               SizedBox(
                                 width: MediaQuery.of(context).size.width,
                                 height: 50.0,
                                 child: TextButton(
                                   onPressed: () async {
-                                    try {
-                                      await _auth.signInWithEmailandPassword(
-                                          email: _emailController.text,
-                                          password: _passwordController.text);
-                                      Navigator.pushReplacementNamed(
-                                          context, '/feed');
-                                    } catch (e) {
-                                      log(e.toString());
-                                    }
+                                    await _auth.passwordReset(
+                                        _emailController.text.trim());
+                                    Navigator.pop(context);
                                   },
                                   child: Text(
-                                    'Log in',
+                                    'Send recovery email',
                                     style: TextStyle(color: Colors.white),
                                   ),
                                   style: ButtonStyle(

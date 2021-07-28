@@ -1,4 +1,13 @@
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:instagram/services/database.dart';
+import 'package:instagram/services/images.dart';
+import 'package:instagram/services/storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BottomNav extends StatefulWidget {
   final currentIndex;
@@ -23,13 +32,31 @@ class _BottomNavState extends State<BottomNav> {
   ];
 
   void _onItemTapped(int index) {
+    setDp();
     if (index == 0 || index == 1 || index == 4)
       Navigator.pushNamed(context, route[index]);
+    if (index == 2)
+      bottomPopUp();
     else {
       setState(() {
         _selectedIndex = index;
       });
     }
+  }
+
+  String _dpUrl =
+      "https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png";
+
+  setDp() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _dpUrl = prefs.getString('dpUrl') ??
+        "https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png";
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   var once = true;
@@ -40,6 +67,7 @@ class _BottomNavState extends State<BottomNav> {
       _selectedIndex = currentIndex;
       once = false;
     }
+    setDp();
     return BottomNavigationBar(
       selectedFontSize: 0.0,
       enableFeedback: true,
@@ -66,19 +94,78 @@ class _BottomNavState extends State<BottomNav> {
             activeIcon: Image.asset("assets/heart_active.png")),
         BottomNavigationBarItem(
           label: "",
-          icon: Image(
-            image: AssetImage("assets/Oval.png"),
-            height: 38,
+          icon: CircleAvatar(
+            backgroundImage: NetworkImage(_dpUrl),
           ),
           activeIcon: CircleAvatar(
             backgroundColor: Colors.black,
             radius: 22,
             child: CircleAvatar(
-              backgroundImage: AssetImage("assets/Oval.png"),
+              backgroundImage: NetworkImage(_dpUrl),
             ),
           ),
         ),
       ],
     );
+  }
+
+  void bottomPopUp() {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text("Camera"),
+            onPressed: () {
+              Navigator.pop(context);
+              cameraUpload();
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: Text("Gallery"),
+            onPressed: () {
+              Navigator.pop(context);
+              galleryUpload();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> galleryUpload() async {
+    final StorageRepo _repo = StorageRepo();
+    final ImageData _imagedb = ImageData();
+    try {
+      XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (image == null) throw ("Image not selected");
+      File file = File(image.path);
+      var prefs = await SharedPreferences.getInstance();
+      // var uid = prefs.getString('uid');
+      var username = prefs.getString('username');
+      String downloadUrl = await _repo.addPost(image.name, file);
+      await _imagedb.addPostToDatabase(
+          username: username, downloadUrl: downloadUrl);
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  Future<void> cameraUpload() async {
+    final StorageRepo _repo = StorageRepo();
+    final ImageData _imagedb = ImageData();
+    try {
+      XFile? image = await ImagePicker().pickImage(source: ImageSource.camera);
+      if (image == null) throw ("Image not selected");
+      File file = File(image.path);
+      var prefs = await SharedPreferences.getInstance();
+      // var uid = prefs.getString('uid');
+      var username = prefs.getString('username');
+      String downloadUrl = await _repo.addPost(image.name, file);
+      await _imagedb.addPostToDatabase(
+          username: username, downloadUrl: downloadUrl);
+    } catch (e) {
+      log(e.toString());
+    }
   }
 }

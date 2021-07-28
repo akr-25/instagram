@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram/components/HorizontalOrLine.dart';
 import 'package:instagram/pages/login_page.dart';
 import 'package:instagram/services/auth.dart';
+import 'package:instagram/services/database.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -18,8 +19,28 @@ class _SignUpState extends State<SignUp> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
+  String? _errorUserMessage;
+  String? _errorConfirmPassMessage;
+  String? _errorPassMessage;
 
   AuthServices _auth = AuthServices();
+  DatabaseService _db = DatabaseService();
+  _isUserUnique() async {
+    try {
+      var _error = await _db.isUnique(_usernameController.text.trim());
+      setState(() {
+        _errorUserMessage = _error;
+      });
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  @override
+  void initState() {
+    _isUserUnique();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -58,9 +79,13 @@ class _SignUpState extends State<SignUp> {
                             children: [
                               SizedBox(
                                   width: MediaQuery.of(context).size.width,
-                                  height: 50.0,
+                                  height:
+                                      (_errorUserMessage == null) ? 50.0 : 70.0,
                                   child: TextField(
                                     controller: _usernameController,
+                                    onChanged: (value) async {
+                                      await _isUserUnique();
+                                    },
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: Colors.grey[100],
@@ -71,6 +96,7 @@ class _SignUpState extends State<SignUp> {
                                         ),
                                       ),
                                       labelText: 'Username',
+                                      errorText: _errorUserMessage,
                                     ),
                                   )),
                               SizedBox(
@@ -99,12 +125,27 @@ class _SignUpState extends State<SignUp> {
                               ),
                               SizedBox(
                                   width: MediaQuery.of(context).size.width,
-                                  height: 50.0,
+                                  height:
+                                      (_errorPassMessage == null) ? 50.0 : 70.0,
                                   child: TextField(
                                     controller: _passwordController,
                                     obscureText: true,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        if (_passwordController.text
+                                                .trim()
+                                                .length <
+                                            6)
+                                          _errorPassMessage =
+                                              "Password is too short";
+                                        else {
+                                          _errorPassMessage = null;
+                                        }
+                                      });
+                                    },
                                     decoration: InputDecoration(
                                       filled: true,
+                                      errorText: _errorPassMessage,
                                       fillColor: Colors.grey[100],
                                       border: OutlineInputBorder(
                                         borderSide: BorderSide(
@@ -120,12 +161,28 @@ class _SignUpState extends State<SignUp> {
                               ),
                               SizedBox(
                                   width: MediaQuery.of(context).size.width,
-                                  height: 50.0,
+                                  height: (_errorConfirmPassMessage == null ||
+                                          _errorPassMessage != null)
+                                      ? 50.0
+                                      : 70.0,
                                   child: TextField(
                                     controller: _confirmPassController,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        if (_passwordController.text.trim() !=
+                                            _confirmPassController.text.trim())
+                                          _errorConfirmPassMessage =
+                                              "Password doesn't match!";
+                                        else
+                                          _errorConfirmPassMessage = null;
+                                      });
+                                    },
                                     obscureText: true,
                                     decoration: InputDecoration(
                                       filled: true,
+                                      errorText: (_errorPassMessage == null)
+                                          ? _errorConfirmPassMessage
+                                          : null,
                                       fillColor: Colors.grey[100],
                                       border: OutlineInputBorder(
                                         borderSide: BorderSide(
@@ -145,7 +202,9 @@ class _SignUpState extends State<SignUp> {
                                 child: TextButton(
                                   onPressed: () async {
                                     if (_confirmPassController.text.trim() ==
-                                        _passwordController.text.trim()) {
+                                            _passwordController.text.trim() &&
+                                        (_errorUserMessage == null) &&
+                                        (_usernameController.text != "")) {
                                       try {
                                         await _auth.addUser(
                                             email: _emailController.text.trim(),

@@ -15,9 +15,13 @@ class Feed extends StatefulWidget {
 
 class _FeedState extends State<Feed> {
   String? _username = "";
+  String? _userDp;
   getUsername() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    _username = prefs.getString('username');
+    setState(() {
+      _username = prefs.getString('username');
+      _userDp = prefs.getString('dpUrl');
+    });
   }
 
   @override
@@ -93,24 +97,20 @@ class _FeedState extends State<Feed> {
                   ...snapshot.data!.docs.map((post) {
                     Map<String, dynamic> data =
                         post.data() as Map<String, dynamic>;
-                    if (data["username"] != _username)
-                      return Post(
-                        caption: data["caption"],
-                        image: data["photoUrl"],
-                        username: data["username"],
-                        isLiked: false,
-                        numOfLike: data["likes"],
-                        location: data["location"],
-                        likedby: "satan",
-                        date: data["date"],
-                        dp: "https://event.iitg.ac.in/icann2019/Proceedings_LaTeX/2019/IITG_White.png",
-                      );
-                    else {
-                      return SizedBox(
-                        height: 0,
-                        width: 0,
-                      );
-                    }
+                    return Post(
+                      caption: data["caption"],
+                      image: data["photoUrl"],
+                      username: data["username"],
+                      isLiked: false,
+                      numOfLike: data["likes"],
+                      location: data["location"],
+                      likedby: "satan",
+                      date: data["date"],
+                      dp: data["dpUrl"] ??
+                          "https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png",
+                      userDp: _userDp ??
+                          "https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png",
+                    );
                   }),
                 ],
               ),

@@ -14,7 +14,7 @@ class Message extends StatelessWidget {
         leading: GestureDetector(
           onTap: () {
             // Navigator.pushNamed(context, "/feed");
-            Navigator.push(context, CupertinoPageRoute(builder: (_) => Feed()));
+            Navigator.pop(context);
           },
           child: Icon(
             Icons.keyboard_arrow_left,

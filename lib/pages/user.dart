@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:instagram/components/BottomNav.dart';
 import 'package:instagram/pages/edit_profile.dart';
 import 'package:instagram/services/images.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfile extends StatefulWidget {
@@ -16,13 +15,16 @@ class UserProfile extends StatefulWidget {
 class _UserProfileState extends State<UserProfile> {
   var numOfPics = 30;
   final crossAxisCount = 3;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  var _displayName = "loading", _bio, _website, _username = "loading";
+  var _displayName = "loading", _bio, _website, _username = "loading", _dpUrl;
 
   setData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     // var __displayName =
     setState(() {
+      _dpUrl = prefs.getString('dpUrl') ??
+          "https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png";
       _displayName = prefs.getString('displayName') ??
           prefs.getString('username') ??
           "error";
@@ -41,6 +43,7 @@ class _UserProfileState extends State<UserProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -75,6 +78,7 @@ class _UserProfileState extends State<UserProfile> {
       body: StreamBuilder(
         stream: ImageData.imageCollection
             .where('username', isEqualTo: _username)
+            // .orderBy('datetime')
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (!snapshot.hasData) {
@@ -82,7 +86,8 @@ class _UserProfileState extends State<UserProfile> {
               child: CircularProgressIndicator(),
             );
           }
-          numOfPics = snapshot.data!.docs.length;
+          numOfPics =
+              multipleOf3(snapshot.data!.docs.length) ?? 1; //?Logic here
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +102,7 @@ class _UserProfileState extends State<UserProfile> {
                         radius: 40,
                         backgroundColor: Colors.white,
                         child: CircleAvatar(
-                          backgroundImage: AssetImage("assets/Oval.png"),
+                          backgroundImage: NetworkImage(_dpUrl),
                           radius: 36.0,
                         ),
                       ),
@@ -216,9 +221,8 @@ class _UserProfileState extends State<UserProfile> {
                   decoration: BoxDecoration(color: Colors.white),
                   width: MediaQuery.of(context).size.width,
                   height: MediaQuery.of(context).size.width *
-                          1.3 *
-                          (numOfPics / (crossAxisCount * crossAxisCount)) +
-                      10,
+                      (numOfPics / (crossAxisCount * crossAxisCount)),
+                  // MediaQuery.of(context).size.height,
                   child: GridView.count(
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 1,
@@ -244,5 +248,13 @@ class _UserProfileState extends State<UserProfile> {
         currentIndex: 4,
       ),
     );
+  }
+
+  multipleOf3(num) {
+    if (num % 3 == 0) {
+      return num;
+    }
+    num++;
+    return multipleOf3(num);
   }
 }
