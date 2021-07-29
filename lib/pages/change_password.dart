@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:instagram/services/auth.dart';
 import 'package:instagram/services/database.dart';
@@ -63,15 +65,12 @@ class _ChangePassState extends State<ChangePass> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width,
-                child: FittedBox(
-                  child: Image(
-                    image: NetworkImage(_dpUrl),
-                  ),
-                  fit: BoxFit.fill,
-                ),
+              SizedBox(
+                height: 50,
+              ),
+              CircleAvatar(
+                backgroundImage: NetworkImage(_dpUrl),
+                radius: 80,
               ),
               SizedBox(
                 height: 10,
@@ -132,7 +131,7 @@ class _ChangePassState extends State<ChangePass> {
                           width: 0.1,
                         ),
                       ),
-                      labelText: 'Password',
+                      labelText: 'New Password',
                     ),
                   )),
               SizedBox(

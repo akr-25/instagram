@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram/pages/feed.dart';
 
 class Message extends StatelessWidget {
   const Message({Key? key}) : super(key: key);

@@ -31,12 +31,12 @@ class AuthServices {
       AuthCredential credential =
           EmailAuthProvider.credential(email: email, password: oldPassword);
 
-      user.reauthenticateWithCredential(credential);
+      await user.reauthenticateWithCredential(credential);
 
       //Pass in the password to updatePassword.
       user.updatePassword(password);
     } catch (e) {
-      throw (e.toString());
+      log(e.toString());
     }
   }
 

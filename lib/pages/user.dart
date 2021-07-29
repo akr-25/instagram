@@ -244,7 +244,7 @@ class _UserProfileState extends State<UserProfile> {
           );
         },
       ),
-      bottomNavigationBar: BottomNav(
+      bottomNavigationBar: const BottomNav(
         currentIndex: 4,
       ),
     );

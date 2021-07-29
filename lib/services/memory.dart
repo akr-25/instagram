@@ -35,4 +35,9 @@ class Memory {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('uid');
   }
+
+  getUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('username');
+  }
 }

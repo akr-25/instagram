@@ -116,7 +116,7 @@ class _FeedState extends State<Feed> {
               ),
             );
           }),
-      bottomNavigationBar: BottomNav(
+      bottomNavigationBar: const BottomNav(
         currentIndex: 0,
       ),
     );
