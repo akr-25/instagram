@@ -2,10 +2,13 @@ import 'dart:developer';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_signin_button/button_view.dart';
 import 'package:instagram/components/HorizontalOrLine.dart';
+import 'package:instagram/components/SnackBar.dart';
 import 'package:instagram/pages/login_page.dart';
 import 'package:instagram/services/auth.dart';
 import 'package:instagram/services/database.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -22,6 +25,7 @@ class _SignUpState extends State<SignUp> {
   String? _errorUserMessage;
   String? _errorConfirmPassMessage;
   String? _errorPassMessage;
+  bool isSigning = false;
 
   AuthServices _auth = AuthServices();
   DatabaseService _db = DatabaseService();
@@ -199,8 +203,14 @@ class _SignUpState extends State<SignUp> {
                               SizedBox(
                                 width: MediaQuery.of(context).size.width,
                                 height: 50.0,
+                                // child: isSigning
+                                //     ? SpinKitThreeBounce(color: Colors.blue,)
+                                //     : signUpWidget(),
                                 child: TextButton(
                                   onPressed: () async {
+                                    setState(() {
+                                      isSigning = true;
+                                    });
                                     if (_confirmPassController.text.trim() ==
                                             _passwordController.text.trim() &&
                                         (_errorUserMessage == null) &&
@@ -216,15 +226,26 @@ class _SignUpState extends State<SignUp> {
                                             context, '/feed');
                                       } catch (e) {
                                         log(e.toString());
+                                        var end = e.toString().indexOf(']');
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(errorSnackBar(e
+                                                .toString()
+                                                .substring(end + 1)));
                                       }
-                                    } else {
-                                      log("Confirm password is not the same as password!!");
                                     }
+                                    setState(() {
+                                      isSigning = false;
+                                    });
                                   },
-                                  child: Text(
-                                    'Sign Up',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
+                                  child: !isSigning
+                                      ? Text(
+                                          'Sign Up',
+                                          style: TextStyle(color: Colors.white),
+                                        )
+                                      : SpinKitThreeBounce(
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
                                   style: ButtonStyle(
                                     backgroundColor:
                                         MaterialStateProperty.all<Color>(

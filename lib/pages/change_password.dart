@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:instagram/components/SnackBar.dart';
 import 'package:instagram/services/auth.dart';
 import 'package:instagram/services/database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +17,7 @@ class ChangePass extends StatefulWidget {
 class _ChangePassState extends State<ChangePass> {
   final AuthServices _auth = AuthServices();
   final DatabaseService db = DatabaseService();
+  bool isUpdating = false;
   String? _username;
   String _dpUrl =
       "https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png";
@@ -182,15 +185,36 @@ class _ChangePassState extends State<ChangePass> {
                       backgroundColor:
                           MaterialStateProperty.all<Color>(Colors.blueAccent)),
                   onPressed: () async {
-                    _auth.changePassword(_passwordController.text.trim(),
-                        _oldPasswordController.text.trim());
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => ChangePass()));
+                    if (_errorConfirmPassMessage == null &&
+                        _errorPassMessage == null &&
+                        _passwordController.text.trim() != "") {
+                      setState(() {
+                        isUpdating = true;
+                      });
+                      try {
+                        await _auth.changePassword(
+                            _passwordController.text.trim(),
+                            _oldPasswordController.text.trim());
+                        Navigator.pop(context);
+                      } catch (e) {
+                        var end = e.toString().indexOf(']');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            errorSnackBar(e.toString().substring(end + 1)));
+                      }
+                      setState(() {
+                        isUpdating = false;
+                      });
+                    }
                   },
-                  child: Text(
-                    "Change Password",
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: !isUpdating
+                      ? Text(
+                          "Change Password",
+                          style: TextStyle(color: Colors.white),
+                        )
+                      : SpinKitThreeBounce(
+                          color: Colors.white,
+                          size: 20,
+                        ),
                 ),
               ),
             ],

@@ -1,12 +1,21 @@
 import 'dart:developer';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:instagram/components/SnackBar.dart';
 import 'package:instagram/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 
-class InitialPage extends StatelessWidget {
+class InitialPage extends StatefulWidget {
   InitialPage({Key? key}) : super(key: key);
 
+  @override
+  _InitialPageState createState() => _InitialPageState();
+}
+
+class _InitialPageState extends State<InitialPage> {
   final AuthServices _auth = AuthServices();
+
+  bool isSigning = false;
 
   @override
   Widget build(BuildContext context) {
@@ -61,18 +70,32 @@ class InitialPage extends StatelessWidget {
           ),
           SizedBox(
             height: 50,
-            child: SignInButton(
-              Buttons.Facebook,
-              text: "Sign in with Facebook",
-              onPressed: () async {
-                try {
-                  await _auth.signInWithFacebook();
-                  Navigator.of(context).pushNamed('/feed');
-                } catch (e) {
-                  log(e.toString());
-                }
-              },
-            ),
+            child: !isSigning
+                ? SignInButton(
+                    Buttons.Facebook,
+                    text: "Sign in with Facebook",
+                    onPressed: () async {
+                      setState(() {
+                        isSigning = true;
+                      });
+                      try {
+                        bool result = await _auth.signInWithFacebook();
+                        if (result == true)
+                          Navigator.of(context).pushReplacementNamed('/feed');
+                        else
+                          Navigator.of(context).pushNamed('/facebook');
+                      } catch (e) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(errorSnackBar(e.toString()));
+                      }
+                      setState(() {
+                        isSigning = false;
+                      });
+                    },
+                  )
+                : SpinKitPumpingHeart(
+                    color: Colors.pink,
+                  ),
           ),
           Spacer(),
         ],

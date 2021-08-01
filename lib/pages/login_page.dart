@@ -2,7 +2,9 @@ import 'dart:developer';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:instagram/components/HorizontalOrLine.dart';
+import 'package:instagram/components/SnackBar.dart';
 import 'package:instagram/pages/forgot_password.dart';
 import 'package:instagram/pages/sign_up_page.dart';
 import 'package:instagram/services/auth.dart';
@@ -18,6 +20,7 @@ class LoginState extends State<Login> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthServices _auth = AuthServices();
+  bool isSigning = false;
 
   @override
   void dispose() {
@@ -124,6 +127,9 @@ class LoginState extends State<Login> {
                                 height: 50.0,
                                 child: TextButton(
                                   onPressed: () async {
+                                    setState(() {
+                                      isSigning = true;
+                                    });
                                     try {
                                       await _auth.signInWithEmailandPassword(
                                           email: _emailController.text,
@@ -132,12 +138,24 @@ class LoginState extends State<Login> {
                                           context, '/feed');
                                     } catch (e) {
                                       log(e.toString());
+                                      var end = e.toString().indexOf(']');
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(errorSnackBar(
+                                              e.toString().substring(end + 1)));
                                     }
+                                    setState(() {
+                                      isSigning = false;
+                                    });
                                   },
-                                  child: Text(
-                                    'Log in',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
+                                  child: !isSigning
+                                      ? Text(
+                                          'Log in',
+                                          style: TextStyle(color: Colors.white),
+                                        )
+                                      : SpinKitThreeBounce(
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
                                   style: ButtonStyle(
                                     backgroundColor:
                                         MaterialStateProperty.all<Color>(

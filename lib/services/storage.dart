@@ -23,4 +23,10 @@ class StorageRepo {
       throw (e.toString());
     }
   }
+
+  deletePost(photoUrl) async {
+    Reference photoRef = repo.refFromURL(photoUrl);
+
+    await photoRef.delete();
+  }
 }

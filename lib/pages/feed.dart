@@ -98,13 +98,16 @@ class _FeedState extends State<Feed> {
                     Map<String, dynamic> data =
                         post.data() as Map<String, dynamic>;
                     return Post(
+                      docID: post.id,
                       caption: data["caption"],
                       image: data["photoUrl"],
                       username: data["username"],
-                      isLiked: false,
+                      isLiked: data["likedBy"].contains(_username),
                       numOfLike: data["likes"],
                       location: data["location"],
-                      likedby: "satan",
+                      likedby: (data["likedBy"].length != 0)
+                          ? data["likedBy"][data["likedBy"].length - 1]
+                          : "none",
                       date: data["date"],
                       dp: data["dpUrl"] ??
                           "https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png",

@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:instagram/components/SnackBar.dart';
 import 'package:instagram/pages/change_password.dart';
 import 'package:instagram/services/auth.dart';
 import 'package:instagram/services/database.dart';
+import 'package:instagram/services/images.dart';
 import 'package:instagram/services/memory.dart';
 import 'package:instagram/services/storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,13 +21,14 @@ class EditProfile extends StatefulWidget {
 
 class _EditProfileState extends State<EditProfile> {
   final AuthServices _auth = AuthServices();
-  final DatabaseService db = DatabaseService();
+  final DatabaseService _db = DatabaseService();
+  final ImageData _image = ImageData();
   final StorageRepo _repo = StorageRepo();
-  late String _username;
+  final Memory mem = Memory();
   String? _errorUserMessage;
-  DatabaseService _db = DatabaseService();
 
   _isUserUnique() async {
+    var _username = await mem.getUserName();
     try {
       if (usernameController.text.trim() == _username) return null;
       var _error = await _db.isUnique(usernameController.text.trim());
@@ -54,7 +57,6 @@ class _EditProfileState extends State<EditProfile> {
   setData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _uid = prefs.getString('uid')!;
-    _username = prefs.getString('username')!;
     setState(() {
       _dpUrl = prefs.getString('dpUrl');
       displayNameController.text = prefs.getString('displayName') ?? "";
@@ -88,14 +90,21 @@ class _EditProfileState extends State<EditProfile> {
         actions: [
           GestureDetector(
             onTap: () async {
-              var uid = await Memory().getUid();
-              await db.updateUserData(
-                  uid: uid,
-                  displayName: displayNameController.text.trim(),
-                  username: usernameController.text.trim(),
-                  website: websiteController.text.trim(),
-                  bio: bioController.text.trim());
-              Navigator.pop(context);
+              if (_errorUserMessage == null)
+                try {
+                  var uid = await Memory().getUid();
+                  await _db.updateUserData(
+                      uid: uid,
+                      displayName: displayNameController.text.trim(),
+                      username: usernameController.text.trim(),
+                      website: websiteController.text.trim(),
+                      bio: bioController.text.trim());
+                  Navigator.pop(context);
+                } catch (e) {
+                  var end = e.toString().indexOf(']');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      errorSnackBar(e.toString().substring(end + 1)));
+                }
             },
             child: Icon(
               Icons.check,
@@ -131,15 +140,17 @@ class _EditProfileState extends State<EditProfile> {
                     File file = File(image.path);
                     var prefs = await SharedPreferences.getInstance();
                     var uid = prefs.getString('uid');
+                    var username = prefs.getString('username');
                     String downloadUrl = await _repo.addUserDp(_uid, file);
-                    await db.updateUserData(uid: uid, dpUrl: downloadUrl);
-                    setState(() async {
-                      SharedPreferences prefs =
-                          await SharedPreferences.getInstance();
-                      _dpUrl = prefs.getString('dpUrl');
-                    });
+                    await _db.updateUserData(uid: uid, dpUrl: downloadUrl);
+                    _image.updateUserPost(
+                        dpUrl: downloadUrl, username: username);
+                    _dpUrl = prefs.getString('dpUrl');
+                    setState(() {});
                   } catch (e) {
-                    log(e.toString());
+                    var end = e.toString().indexOf(']');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        errorSnackBar(e.toString().substring(end + 1)));
                   }
                 },
                 child: Text(

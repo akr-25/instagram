@@ -116,16 +116,48 @@ class _BottomNavState extends State<BottomNav> {
         actions: [
           CupertinoActionSheetAction(
             child: Text("Camera"),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              cameraUpload();
+              TextEditingController captionController = TextEditingController();
+              showDialog(
+                  context: context,
+                  builder: (_) => CupertinoAlertDialog(
+                        title: Text("Caption"),
+                        content: CupertinoTextField(
+                          controller: captionController,
+                        ),
+                        actions: [
+                          CupertinoButton(
+                              child: Text("Submit"),
+                              onPressed: () {
+                                cameraUpload(captionController.text);
+                                Navigator.pop(context);
+                              })
+                        ],
+                      ));
             },
           ),
           CupertinoActionSheetAction(
             child: Text("Gallery"),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              galleryUpload();
+              TextEditingController captionController = TextEditingController();
+              showDialog(
+                  context: context,
+                  builder: (_) => CupertinoAlertDialog(
+                        title: Text("Caption"),
+                        content: CupertinoTextField(
+                          controller: captionController,
+                        ),
+                        actions: [
+                          CupertinoButton(
+                              child: Text("Submit"),
+                              onPressed: () {
+                                galleryUpload(captionController.text);
+                                Navigator.pop(context);
+                              })
+                        ],
+                      ));
             },
           ),
         ],
@@ -133,7 +165,7 @@ class _BottomNavState extends State<BottomNav> {
     );
   }
 
-  Future<void> galleryUpload() async {
+  Future<void> galleryUpload(caption) async {
     final StorageRepo _repo = StorageRepo();
     final ImageData _imagedb = ImageData();
     try {
@@ -145,13 +177,13 @@ class _BottomNavState extends State<BottomNav> {
       var username = prefs.getString('username');
       String downloadUrl = await _repo.addPost(image.name, file);
       await _imagedb.addPostToDatabase(
-          username: username, downloadUrl: downloadUrl);
+          username: username, downloadUrl: downloadUrl, caption: caption);
     } catch (e) {
       log(e.toString());
     }
   }
 
-  Future<void> cameraUpload() async {
+  Future<void> cameraUpload(caption) async {
     final StorageRepo _repo = StorageRepo();
     final ImageData _imagedb = ImageData();
     try {
@@ -163,7 +195,7 @@ class _BottomNavState extends State<BottomNav> {
       var username = prefs.getString('username');
       String downloadUrl = await _repo.addPost(image.name, file);
       await _imagedb.addPostToDatabase(
-          username: username, downloadUrl: downloadUrl);
+          username: username, downloadUrl: downloadUrl, caption: caption);
     } catch (e) {
       log(e.toString());
     }

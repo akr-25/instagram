@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:instagram/components/SnackBar.dart';
+import 'package:instagram/services/images.dart';
+import 'package:instagram/services/memory.dart';
 
 class Post extends StatefulWidget {
   final likedby;
@@ -11,6 +14,7 @@ class Post extends StatefulWidget {
   final numOfLike;
   final date;
   final userDp;
+  final docID;
 
   Post(
       {Key? key,
@@ -23,7 +27,8 @@ class Post extends StatefulWidget {
       required this.likedby,
       required this.numOfLike,
       required this.date,
-      required this.userDp})
+      required this.userDp,
+      required this.docID})
       : super(key: key);
 
   @override
@@ -31,6 +36,8 @@ class Post extends StatefulWidget {
 }
 
 class _PostState extends State<Post> {
+  ImageData _imgDB = ImageData();
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -90,7 +97,31 @@ class _PostState extends State<Post> {
             ],
           ),
         ),
-        Image.network(widget.image),
+        Image.network(
+          widget.image,
+          loadingBuilder: (BuildContext context, Widget child,
+              ImageChunkEvent? loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height / 3,
+              color: Colors.blueGrey.shade50,
+              child: Center(
+                heightFactor: 1,
+                widthFactor: 1,
+                child: CircularProgressIndicator(
+                  backgroundColor: Colors.white,
+                  color: Colors.black87,
+                  strokeWidth: 2.0,
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              ),
+            );
+          },
+        ),
         Container(
           padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
           child: Column(
@@ -100,26 +131,29 @@ class _PostState extends State<Post> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       setState(() {
                         (widget.isLiked)
                             ? widget.isLiked = false
                             : widget.isLiked = true;
                       });
-                      final snackBar = SnackBar(
-                        backgroundColor: Colors.white,
-                        behavior: SnackBarBehavior.floating,
-                        duration: Duration(seconds: 2),
-                        content: Text(
-                          "You Have Liked The Post",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      );
+                      var _username = await Memory().getUserName();
 
-                      // Find the ScaffoldMessenger in the widget tree
-                      // and use it to show a SnackBar.
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      if (widget.isLiked) {
+                        _imgDB.updatePostLike(
+                            username: _username,
+                            liked: true,
+                            docID: widget.docID);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            postSnackBar("You Have Liked The Post"));
+                      } else {
+                        _imgDB.updatePostLike(
+                            username: _username,
+                            liked: false,
+                            docID: widget.docID);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            postSnackBar("You Have Unliked The Post"));
+                      }
                     },
                     child: Image(
                       image: AssetImage((widget.isLiked)
@@ -153,8 +187,11 @@ class _PostState extends State<Post> {
                   SizedBox(
                     width: 10.0,
                   ),
-                  Text(
-                      'Liked by ${widget.likedby ?? "none"}  and ${widget.numOfLike} others')
+                  Text((widget.numOfLike == 0)
+                      ? 'No one liked your picture, die!'
+                      : (widget.numOfLike == 1)
+                          ? 'Liked by ${widget.likedby}'
+                          : 'Liked by ${widget.likedby}  and ${widget.numOfLike - 1} others')
                 ],
               ),
               SizedBox(

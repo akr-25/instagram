@@ -20,9 +20,8 @@ class AuthServices {
     }
   }
 
-  void changePassword(String password, String oldPassword) async {
+  changePassword(String password, String oldPassword) async {
     //Create an instance of the current user.
-// ! Fix this and update memory!!
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       var email = prefs.getString('email');
@@ -36,30 +35,31 @@ class AuthServices {
       //Pass in the password to updatePassword.
       user.updatePassword(password);
     } catch (e) {
-      log(e.toString());
+      throw (e.toString());
     }
   }
 
-  //Stream to listen to auth state changes
-  Stream<User?> get user {
-    log(_auth.authStateChanges().toString());
-    return _auth.authStateChanges();
-  }
-
   //Login using Facebook
-  Future<UserCredential?> signInWithFacebook() async {
+  Future signInWithFacebook() async {
     final LoginResult result = await FacebookAuth.instance.login();
     if (result.status == LoginStatus.success) {
       log("success");
-      // Create a credential from the access token
-      final OAuthCredential credential =
-          FacebookAuthProvider.credential(result.accessToken!.token);
-      db.getUserData();
-
-      // Once signed in, return the UserCredential
-      return await FirebaseAuth.instance.signInWithCredential(credential);
+      try {
+        // Create a credential from the access token
+        final OAuthCredential credential =
+            FacebookAuthProvider.credential(result.accessToken!.token);
+        // Once signed in, return the UserCredential
+        UserCredential user =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+        mem.saveUser(user.user!.uid);
+        bool userExists =
+            await db.getUserDataUsingUid(user.user!.uid, returnType: bool);
+        return userExists;
+      } catch (e) {
+        throw ("Unexpected error occurred");
+      }
     } else if (result.status == LoginStatus.cancelled)
-      throw ("cancelled by user");
+      throw ("Cancelled by user");
     throw ("Authentication failed");
   }
 
@@ -70,7 +70,7 @@ class AuthServices {
       UserCredential user = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       await mem.saveUser(user.user!.uid);
-      await db.getUserData();
+      await db.getCurrentUserData();
     } catch (e) {
       throw (e.toString());
     }
@@ -93,13 +93,8 @@ class AuthServices {
   }
 
   //getting the current user
-  getUser() async {
+  getCurrentUser() async {
     var _currentUser = _auth.currentUser;
-    // final AccessToken? accessToken = await FacebookAuth.instance.accessToken;
-    // if (accessToken != null) {
-    //   final userData = await FacebookAuth.instance.getUserData();
-    //   return userData;
-    // }
     return _currentUser;
   }
 
@@ -110,8 +105,7 @@ class AuthServices {
       await _auth.signOut();
       await mem.deleteUser();
     } catch (e) {
-      log(e.toString());
-      return null;
+      throw (e.toString());
     }
   }
 }

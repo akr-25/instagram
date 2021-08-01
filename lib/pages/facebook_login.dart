@@ -1,28 +1,42 @@
 import 'dart:developer';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:instagram/components/HorizontalOrLine.dart';
 import 'package:instagram/components/SnackBar.dart';
-import 'package:instagram/pages/sign_up_page.dart';
 import 'package:instagram/services/auth.dart';
+import 'package:instagram/services/database.dart';
 
-class ForgotPass extends StatefulWidget {
-  const ForgotPass({Key? key}) : super(key: key);
+// in this page we will take username and save it to the database if it doesn't
+// exist, won't show this page if it exists!!
+
+class FacebookLogin extends StatefulWidget {
+  const FacebookLogin({Key? key}) : super(key: key);
 
   @override
-  ForgotPassState createState() => ForgotPassState();
+  FacebookLoginState createState() => FacebookLoginState();
 }
 
-class ForgotPassState extends State<ForgotPass> {
-  final _emailController = TextEditingController();
+class FacebookLoginState extends State<FacebookLogin> {
+  final _usernameController = TextEditingController();
   final AuthServices _auth = AuthServices();
+  final DatabaseService _db = DatabaseService();
+  String? _errorUserMessage;
   bool isSending = false;
+
+  _isUserUnique() async {
+    try {
+      var _error = await _db.isUnique(_usernameController.text.trim());
+      setState(() {
+        _errorUserMessage = _error;
+      });
+    } catch (e) {
+      log(e.toString());
+    }
+  }
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -60,21 +74,25 @@ class ForgotPassState extends State<ForgotPass> {
                             children: [
                               SizedBox(
                                 width: MediaQuery.of(context).size.width,
-                                height: 50.0,
+                                height:
+                                    (_errorUserMessage == null) ? 50.0 : 70.0,
                                 child: TextField(
                                   keyboardType: TextInputType.emailAddress,
-                                  controller: _emailController,
+                                  onChanged: (value) async {
+                                    await _isUserUnique();
+                                  },
+                                  controller: _usernameController,
                                   decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.grey[100],
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade600,
-                                        width: 0.1,
+                                      filled: true,
+                                      fillColor: Colors.grey[100],
+                                      border: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade600,
+                                          width: 0.1,
+                                        ),
                                       ),
-                                    ),
-                                    labelText: 'Email Address',
-                                  ),
+                                      labelText: 'Username',
+                                      errorText: _errorUserMessage),
                                 ),
                               ),
                               SizedBox(
@@ -88,23 +106,26 @@ class ForgotPassState extends State<ForgotPass> {
                                     setState(() {
                                       isSending = true;
                                     });
-                                    try {
-                                      await _auth.passwordReset(
-                                          _emailController.text.trim());
-                                      Navigator.pop(context);
-                                    } catch (e) {
-                                      var end = e.toString().indexOf(']');
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(errorSnackBar(
-                                              e.toString().substring(end + 1)));
-                                    }
+                                    if (_errorUserMessage == null)
+                                      try {
+                                        await _db.addFacebookUser(
+                                            _usernameController.text.trim());
+                                        Navigator.pushReplacementNamed(
+                                            context, '/feed');
+                                      } catch (e) {
+                                        var end = e.toString().indexOf(']');
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(errorSnackBar(e
+                                                .toString()
+                                                .substring(end + 1)));
+                                      }
                                     setState(() {
                                       isSending = false;
                                     });
                                   },
                                   child: !isSending
                                       ? Text(
-                                          'Send recovery email',
+                                          'Save username!',
                                           style: TextStyle(color: Colors.white),
                                         )
                                       : SpinKitThreeBounce(
@@ -119,41 +140,6 @@ class ForgotPassState extends State<ForgotPass> {
                                 ),
                               ),
                             ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Bottom Part
-
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Column(
-                        children: [
-                          HorizontalOrLine(height: 10, label: "OR"),
-                          SizedBox(
-                            height: 30,
-                          ),
-                          Center(
-                            child: Text.rich(
-                              TextSpan(
-                                text: "Don't have an account?",
-                                children: [
-                                  TextSpan(
-                                      text: '  Sign up',
-                                      style: TextStyle(color: Colors.blue),
-                                      recognizer: new TapGestureRecognizer()
-                                        ..onTap = () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => SignUp(),
-                                            ),
-                                          );
-                                        }),
-                                ],
-                              ),
-                            ),
                           ),
                         ],
                       ),
