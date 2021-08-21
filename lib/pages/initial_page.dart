@@ -1,11 +1,7 @@
-import 'dart:developer';
-import 'package:instagram/services/auth.dart';
 import 'package:flutter/material.dart';
 
 class InitialPage extends StatelessWidget {
-  InitialPage({Key? key}) : super(key: key);
-
-  final AuthServices _auth = AuthServices();
+  const InitialPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +23,7 @@ class InitialPage extends StatelessWidget {
                 Navigator.of(context).pushNamed('/login');
               },
               child: Text(
-                'Login with email',
+                'Login',
                 style: TextStyle(color: Colors.white),
               ),
               style: ButtonStyle(
@@ -43,7 +39,7 @@ class InitialPage extends StatelessWidget {
             height: 50.0,
             child: OutlinedButton(
                 child: Text(
-                  'Sign Up with email',
+                  'Sign Up',
                   // style: TextStyle(color: Colors.blue),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -53,36 +49,6 @@ class InitialPage extends StatelessWidget {
                 ),
                 onPressed: () {
                   Navigator.of(context).pushNamed('/signup');
-                }),
-          ),
-          SizedBox(
-            height: 70.0,
-          ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: 50.0,
-            child: OutlinedButton(
-                child: Row(
-                  children: [
-                    Text(
-                      'Login with Facebook',
-                      // style: TextStyle(color: Colors.blue),
-                    ),
-                    Icon(Icons.facebook),
-                  ],
-                ),
-                style: OutlinedButton.styleFrom(
-                  primary: Colors.blue,
-                  backgroundColor: Colors.grey[50],
-                  side: BorderSide(color: Colors.blue, width: 1),
-                ),
-                onPressed: () async {
-                  try {
-                    await _auth.signInWithFacebook();
-                    Navigator.of(context).pushNamed('/feed');
-                  } catch (e) {
-                    log(e.toString());
-                  }
                 }),
           ),
           Spacer(),

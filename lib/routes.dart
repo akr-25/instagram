@@ -36,7 +36,7 @@ class RouteGenerator {
             transitionDuration: Duration(milliseconds: 0));
       case '/user':
         return PageRouteBuilder(
-            pageBuilder: (_, animation1, animation2) => UserProfile(),
+            pageBuilder: (_, animation1, animation2) => User(),
             transitionDuration: Duration(milliseconds: 0));
       default:
         {

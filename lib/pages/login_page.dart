@@ -1,10 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram/components/HorizontalOrLine.dart';
+import 'package:instagram/pages/feed.dart';
 import 'package:instagram/pages/sign_up_page.dart';
-import 'package:instagram/services/auth.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -14,17 +11,6 @@ class Login extends StatefulWidget {
 }
 
 class LoginState extends State<Login> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final AuthServices _auth = AuthServices();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -61,8 +47,6 @@ class LoginState extends State<Login> {
                                   width: MediaQuery.of(context).size.width,
                                   height: 50.0,
                                   child: TextField(
-                                    keyboardType: TextInputType.emailAddress,
-                                    controller: _emailController,
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: Colors.grey[100],
@@ -72,7 +56,7 @@ class LoginState extends State<Login> {
                                           width: 0.1,
                                         ),
                                       ),
-                                      labelText: 'Email Address',
+                                      labelText: 'Username',
                                     ),
                                   )),
                               SizedBox(
@@ -83,7 +67,6 @@ class LoginState extends State<Login> {
                                   height: 50.0,
                                   child: TextField(
                                     obscureText: true,
-                                    controller: _passwordController,
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: Colors.grey[100],
@@ -112,16 +95,13 @@ class LoginState extends State<Login> {
                                 width: MediaQuery.of(context).size.width,
                                 height: 50.0,
                                 child: TextButton(
-                                  onPressed: () async {
-                                    try {
-                                      await _auth.signInWithEmailandPassword(
-                                          email: _emailController.text,
-                                          password: _passwordController.text);
-                                      Navigator.pushReplacementNamed(
-                                          context, '/feed');
-                                    } catch (e) {
-                                      log(e.toString());
-                                    }
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => Feed(),
+                                      ),
+                                    );
                                   },
                                   child: Text(
                                     'Log in',
@@ -192,5 +172,38 @@ class LoginState extends State<Login> {
             ),
           ),
         ));
+  }
+}
+
+class HorizontalOrLine extends StatelessWidget {
+  const HorizontalOrLine({
+    required this.label,
+    required this.height,
+  });
+
+  final String label;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: <Widget>[
+      Expanded(
+        child: new Container(
+            margin: const EdgeInsets.only(left: 10.0, right: 15.0),
+            child: Divider(
+              color: Colors.black,
+              height: height,
+            )),
+      ),
+      Text(label),
+      Expanded(
+        child: new Container(
+            margin: const EdgeInsets.only(left: 15.0, right: 10.0),
+            child: Divider(
+              color: Colors.black,
+              height: height,
+            )),
+      ),
+    ]);
   }
 }
